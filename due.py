@@ -51,22 +51,21 @@ def main(todo_file, future_days=0):
         # Loop through content and look for due dates, assuming standard date format
         key = os.getenv("TODO_TXT_DUE_KEY", "due")
 
-        for i, task in enumerate(content):
+        # Skip completed tasks, according to user set flag
+        if  os.getenv("TODO_TXT_DUE_HIDECOMPLETED") == "1" \
+        and task[0] == "x":
+            continue
 
-            # Skip completed tasks, according to user set flag
-            if  os.getenv("TODO_TXT_DUE_HIDECOMPLETED") == "1" \
-            and task[0] == "x":
-                continue
-            
+        for i, task in enumerate(content):
             match = re.findall(
                 r"(\([A-Z]\))?[A-Za-z0-9+@\s]+%s:(\d{4}-\d{2}-\d{2})" % key, task
             )
 
             if match:
                 date = datetime.strptime(match[0][1], "%Y-%m-%d").date()
-                tasks_with_date.append((i, task, date, match[0][0]))
+                tasks_with_date.append((i, task, date))
 
-        # Sort tasks that match due: regex by date, then priority
+        # Sort tasks with a due date: regex by date, then priority
         sorted_tasks = sorted(tasks_with_date, key=lambda tup: (tup[2], tup[1]))
         zero_pad = int(math.log10(len(content))) + 1
 
